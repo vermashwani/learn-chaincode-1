@@ -31,40 +31,39 @@ type SimpleChaincode struct {
 // Main
 // ============================================================================================================================
 func main() {
-	err := shim.Start(new(SimpleChaincode))
-	if err != nil {
-		fmt.Printf("Error starting Simple chaincode: %s", err)
-	}
+    err := shim.Start(new(SimpleChaincode))
+    if err != nil {
+        fmt.Printf("Error starting Simple chaincode: %s", err)
+    }
 }
 
 // Init resets all the things
 func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
-	if len(args) != 1 {
-		return nil, errors.New("Incorrect number of arguments. Expecting 1")
-	}
-	
-	err := stub.PutState("hello_world", []byte(args[0]))
-	
+    if len(args) != 1 {
+        return nil, errors.New("Incorrect number of arguments. Expecting 1")
+    }
+
+    err := stub.PutState("hello_world", []byte(args[0]))
     if err != nil {
         return nil, err
     }
-	
-	return nil, nil
+
+    return nil, nil
 }
 
 // Invoke is our entry point to invoke a chaincode function
 func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
-	fmt.Println("invoke is running " + function)
+    fmt.Println("invoke is running " + function)
 
-	// Handle different functions
-	if function == "init" {													//initialize the chaincode state, used as reset
-		return t.Init(stub, "init", args)
-	} else if function == "addwrite" {
-        return t.addwrite(stub, args)
+    // Handle different functions
+    if function == "init" {
+        return t.Init(stub, "init", args)
+    } else if function == "write" {
+        return t.write(stub, args)
     }
-	fmt.Println("invoke did not find func: " + function)					//error
+    fmt.Println("invoke did not find func: " + function)
 
-	return nil, errors.New("Received unknown function invocation: " + function)
+    return nil, errors.New("Received unknown function invocation")
 }
 // Function added to write
 func (t *SimpleChaincode) write(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
@@ -87,15 +86,15 @@ func (t *SimpleChaincode) write(stub shim.ChaincodeStubInterface, args []string)
 
 // Query is our entry point for queries
 func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
-	fmt.Println("query is running " + function)
+    fmt.Println("query is running " + function)
 
-	// Handle different functions
-	if function == "read" {											//read a variable
-		return t.read(stub, args)
-	}
-	fmt.Println("query did not find func: " + function)						//error
+    // Handle different functions
+    if function == "read" {                            //read a variable
+        return t.read(stub, args)
+    }
+    fmt.Println("query did not find func: " + function)
 
-	return nil, errors.New("Received unknown function query: " + function)
+    return nil, errors.New("Received unknown function query")
 }
 // Function added to read 
 func (t *SimpleChaincode) read(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
@@ -116,19 +115,5 @@ func (t *SimpleChaincode) read(stub shim.ChaincodeStubInterface, args []string) 
     return valAsbytes, nil
 }
 
-func (t *SimpleChaincode) addwrite(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
-    var name, value string
-    var err error
-    fmt.Println("running write()")
-
-    if len(args) != 3 {
-        return nil, errors.New("Incorrect number of arguments. Expecting 2. name of the variable and value to set")
-    }
-
-    value = fmt.Sprintf("%s %s ",args[1], args[2])
-    err = stub.PutState(name, []byte(value))  //write the variable into the chaincode state
-    if err != nil {
-        return nil, err
-    }
-    return nil, nil
+    return valAsbytes, nil
 }
